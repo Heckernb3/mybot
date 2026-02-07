@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>প্রো এআই সহকারী</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #007bff;
+      --bg: #f4f7f6;
+      --white: #ffffff;
+      --bot-msg: #f1f0f0;
+      --user-msg: #007bff;
+      font-family: 'Noto Sans Bengali', sans-serif;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: #333; }
+    .app-container { display: flex; flex-direction: column; height: 100vh; max-width: 500px; margin: auto; background: var(--white); box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    .header { background: var(--primary); color: white; padding: 45px 20px 15px; text-align: center; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 800; }
+    .header p { margin: 5px 0 0; font-size: 13px; opacity: 0.9; font-weight: 600; }
+    #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+    .message { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.5; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .user { align-self: flex-end; background: var(--user-msg); color: white; border-bottom-right-radius: 2px; }
+    .bot { align-self: flex-start; background: var(--bot-msg); color: #333; border-bottom-left-radius: 2px; }
+    .typing { font-size: 13px; color: #888; display: none; margin: 0 0 10px 20px; }
+    .input-area { padding: 15px; display: flex; gap: 10px; background: white; border-top: 1px solid #eee; padding-bottom: env(safe-area-inset-bottom, 20px); }
+    input { flex: 1; border: 2px solid #eee; padding: 12px 20px; border-radius: 30px; outline: none; font-size: 15px; }
+    button { background: var(--primary); border: none; width: 48px; height: 48px; border-radius: 50%; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header">
+    <h1>প্রো এআই সহকারী</h1>
+    <p>ডেভেলপার: SYAED FOYEZ</p> 
+  </div>
+
+  <div id="chat-box">
+    <div class="message bot">হ্যালো! আমি SYAED FOYEZ এর তৈরি একটি শক্তিশালী এআই। আমি আপনাকে কীভাবে সাহায্য করতে পারি?</div>
+  </div>
+
+  <div class="typing" id="typing-status">উত্তর তৈরি করছি...</div>
+
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="আপনার প্রশ্নটি এখানে লিখুন..." />
+    <button id="sendBtn">➤</button>
+  </div>
+</div>
+
+<script>
+  const API_KEY = "AIzaSyAhW38Qe354pX8B2JRKhvElh05tXZt4GxI"; 
+  const chatBox = document.getElementById('chat-box');
+  const userInput = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const typingStatus = document.getElementById('typing-status');
+
+  function appendMessage(text, type) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${type}`;
+    msgDiv.innerText = text;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  async function getAIResponse(prompt) {
+    typingStatus.style.display = 'block';
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      const data = await response.json();
+      typingStatus.style.display = 'none';
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+        appendMessage(data.candidates[0].content.parts[0].text, 'bot');
+      } else {
+        appendMessage("দুঃখিত, কোনো সমস্যা হয়েছে।", 'bot');
+      }
+    } catch (error) {
+      typingStatus.style.display = 'none';
+      appendMessage("ইন্টারনেট চেক করুন।", 'bot');
+    }
+  }
+
+  sendBtn.onclick = () => {
+    const text = userInput.value.trim();
+    if (!text) return;
+    appendMessage(text, 'user');
+    userInput.value = '';
+    getAIResponse(text);
+  };
+
+  userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
+</script>
+
+</body>
+</html>
